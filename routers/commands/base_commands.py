@@ -1,0 +1,35 @@
+from aiogram import Router, types
+from aiogram.filters import Command
+
+from keybords.reply_keyboards import main_keyboard
+
+router = Router()
+
+
+@router.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer(
+        text=f"Привет, {message.from_user.full_name}!\n"
+             "Я помогу тебе с расписанием занятий!\n"
+             "Выбери действие:",
+        reply_markup=main_keyboard
+    )
+
+
+@router.message(Command("help"))
+async def cmd_help(message: types.Message):
+    await message.answer(text=""
+                              "❓ Как пользоваться ботом:\n\n"
+                              "\n"
+                              "📅 Чтобы получить расписание:\n"
+                              "\n"
+                              "1. Нажми «Получить расписание»\n"
+                              "2. Введи название группы\n"
+                              "3. Выбери день недели\n\n"
+                              "\n"
+                              "🚪 Чтобы найти свободные аудитории:\n"
+                              "\n"
+                              "1. Нажми «Найти свободные аудитории»\n"
+                              "2. Выбери день недели\n"
+                              "3. Выбери номер пары"
+                         )
