@@ -43,11 +43,10 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
 
         for item in schedule:
             if type(item) == str:
-                response += f"{item}\n"
-                response += f"\n"
+                response += f"{item}\n\n"
             else:
                 if item[1]:
-                    response += f"⏰ {item[0]}: {item[1]}\n"
+                    response += f"⏰ {item[0]}: {item[1]}\n\n"
 
         await callback.message.edit_text(response)
         await state.clear()
@@ -87,10 +86,10 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
         for room in free_rooms:
             response += f"🔑 Ауд. {room[0]}\n"
             if room[1]:
-                response += f"Информация:\n{room[1]}\n"
+                response += f"Информация:\n{room[1]}\n\n"
             else:
-                response += f"Информация отсутствует\n"
-            response += "\n"
+                response += f"Информация отсутствует\n\n"
+
 
         await callback.message.edit_text(response)
         await state.clear()
