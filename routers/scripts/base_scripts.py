@@ -17,7 +17,8 @@ class Form(StatesGroup):
 
 @router.message(F.text == "📅 Получить расписание")
 async def start_schedule(message: types.Message, state: FSMContext):
-    await message.answer("📝 Введи название своей группы:")
+    await message.answer("📝 Введи название своей группы"
+                         "\nНапиример ИВТ-13БО:")
     await state.set_state(Form.select_group)
 
 
@@ -56,8 +57,6 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
 
-
-
 @router.message(F.text == "🚪 Найти свободные аудитории")
 async def start_free_classrooms(message: types.Message, state: FSMContext):
     await message.answer("📅 Выбери день недели:", reply_markup=days_keyboard)
@@ -86,7 +85,12 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
         )
 
         for room in free_rooms:
-            response += f"🔑 Ауд. {room}\n"
+            response += f"🔑 Ауд. {room[0]}\n"
+            if room[1]:
+                response += f"Информация:\n{room[1]}\n"
+            else:
+                response += f"Информация отсутствует\n"
+            response += "\n"
 
         await callback.message.edit_text(response)
         await state.clear()

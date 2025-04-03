@@ -13,7 +13,7 @@ week_keyboard = InlineKeyboardMarkup(
 )
 lessons_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text=str(i), callback_data=f"lesson_{i}") for i in range(1, 7)]
+        [InlineKeyboardButton(text=str(i), callback_data=f"lesson_{i}") for i in range(1, 6)]
     ]
 )
 
