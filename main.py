@@ -20,17 +20,24 @@ dp.include_router(base_script_router)
 async def send_notifications(upds):
     users = await get_all_users()
     upd_group = set()
-
-    message = "Обнаружены изменения в расписании\n"
     for upd in upds:
         upd_group.add(upd[3])
-        message += "\n"
-        message += f"{upd[3]} ({upd[-1]})\n"
-        message += f"{upd[-2]}\n"
-        message += f"{upd[2]}\n"
+    message = "Обнаружены изменения в расписании\n"
+    message += "\n"
+    message += f"{upd[3]} ({upd[-1]})\n"
+    message += f"{upd[-2]}\n"
+    message += f"{upd[2]}\n"
 
     for chat_id, group in users:
         if group in upd_group:
+            message = "Обнаружены изменения в расписании\n"
+            for upd in upds:
+                if group == upd[3] and upd[2] not in message:
+                    message += "\n"
+                    message += f"{upd[3]} ({upd[-1]})\n"
+                    message += f"{upd[-2]}\n"
+                    message += f"{upd[2]}\n"
+
             try:
                 await bot.send_message(chat_id, message)
             except Exception as e:
