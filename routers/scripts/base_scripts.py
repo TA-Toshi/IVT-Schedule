@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
+from gs.db import add_to_db
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom
 
@@ -24,7 +25,8 @@ async def start_schedule(message: types.Message, state: FSMContext):
 
 @router.message(Form.select_group)
 async def process_group(message: types.Message, state: FSMContext):
-    await state.update_data(group=message.text)
+
+    await state.update_data(group=message.text, id=message.from_user.id)
     await message.answer("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
     await state.set_state(Form.select_day)
 
@@ -35,6 +37,7 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     try:
+        await add_to_db(data["id"], data["group"])
         if day == "неделя":
             schedule = get_by_group(data['group'])
         else:
@@ -89,7 +92,6 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
                 response += f"Информация:\n{room[1]}\n\n"
             else:
                 response += f"Информация отсутствует\n\n"
-
 
         await callback.message.edit_text(response)
         await state.clear()

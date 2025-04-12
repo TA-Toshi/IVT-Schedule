@@ -72,6 +72,14 @@ def parse_time(time_interval):
     return dt.hour * 60 + dt.minute
 
 
+def get_groups():
+    groups = lines_schedule[0]
+    return groups[6:len(groups) - 4]
+
+
+# print(get_groups())
+
+
 def get_by_day(group, day):
     first_last = get_day_place(day)
     row_first = first_last[0] - 1
@@ -136,19 +144,10 @@ def get_free_classroom(day, number):
 
 
 # pprint(get_free_classroom("понедельник", 2))
-def add_to_db(user_id):
-    pass
-
-
-def del_from_db(user_id):
-    pass
 
 
 # txt??
 last_values = None
-
-# db
-subscribers = set()
 
 
 # Самый прямой вариант
@@ -180,19 +179,14 @@ def check_spreadsheet_changes():
     return False
 
 
-def send_notifications(upd):
-    # message = "Обнаружены изменения в таблице:\n\n" + "\n".join(changes)
-    print(upd)
-    # for chat_id in subscribers:
-    #     try:
-    #         print(message)
-    #     except Exception as e:
-    #         print(f"Ошибка отправки сообщения {chat_id}: {e}")
+# def send_notifications(upd):
+#     # message = "Обнаружены изменения в таблице:\n\n" + "\n".join(changes)
+#     print(upd)
 
 
-while True:
-    time.sleep(2)  # Проверка каждые 30 секунд
-    changes = check_spreadsheet_changes()
-    # print(changes)
-    if changes:
-        send_notifications(changes)
+# while True:
+#     time.sleep(2)  # Проверка каждые 30 секунд
+#     changes = check_spreadsheet_changes()
+#     # print(changes)
+#     if changes:
+#         send_notifications(changes)

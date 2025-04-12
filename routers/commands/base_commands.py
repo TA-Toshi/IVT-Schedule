@@ -1,6 +1,8 @@
 from aiogram import Router, types
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 
+from gs.db import add_to_db, del_from_db
+from gs.gs_api import get_groups
 from keybords.reply_keyboards import main_keyboard
 
 router = Router()
@@ -33,3 +35,21 @@ async def cmd_help(message: types.Message):
                               "2. Выбери день недели\n"
                               "3. Выбери номер пары"
                          )
+
+
+@router.message(Command("sub"))
+async def cmd_sub(message: types.Message, command: CommandObject):
+    if command.args not in get_groups():
+        await message.answer(text="❌ Произошла ошибка. Проверь название группы")
+    else:
+        await add_to_db(message.from_user.id, command.args)
+        await message.answer(text=f"{command.args}")
+
+
+@router.message(Command("unsub"))
+async def cmd_sub(message: types.Message, command: CommandObject):
+    if command.args not in get_groups():
+        await message.answer(text="❌ Произошла ошибка. Проверь название группы")
+    else:
+        await del_from_db(message.from_user.id, command.args)
+        await message.answer(text=f"{command.args}")
