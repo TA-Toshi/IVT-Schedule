@@ -1,8 +1,9 @@
+import asyncio
+import time
 from datetime import datetime
 from pathlib import Path
 import gspread
 import re
-from pprint import pprint
 
 current_dir = Path(__file__).parent
 creds_path = current_dir.parent / "creds.json"
@@ -12,7 +13,6 @@ wks = gc.open_by_key("164JbfoXNQVtHmsUGcReAKX81pZPDimaIORAKQ1Fi6Hg")
 
 worksheet_schedule = wks.get_worksheet(0)
 worksheet_cabs = wks.get_worksheet(1)
-# worksheet_teacher = wks.get_worksheet(2)
 
 lines_schedule = worksheet_schedule.get_all_values(
     combine_merged_cells=True,
@@ -136,5 +136,63 @@ def get_free_classroom(day, number):
 
 
 # pprint(get_free_classroom("понедельник", 2))
-def alarm():
+def add_to_db(user_id):
     pass
+
+
+def del_from_db(user_id):
+    pass
+
+
+# txt??
+last_values = None
+
+# db
+subscribers = set()
+
+
+# Самый прямой вариант
+def check_spreadsheet_changes():
+    global last_values
+    current_values = worksheet_schedule.get_all_values(
+        combine_merged_cells=True,
+        maintain_size=True,
+        pad_values=True
+    )
+
+    if last_values is None:
+        last_values = current_values
+        return False
+
+    if current_values != last_values:
+        upd = []
+        for row, (prev_row, curr_row) in enumerate(zip(last_values, current_values)):
+            for col in range(len(prev_row)):
+                if prev_row[col] != curr_row[col]:
+                    # changes.append(f"Строка {i + 1}, Столбец {j + 1}: {curr_row[j]}")
+                    tm = current_values[row][5].replace("\n", "")[1:]
+                    group = current_values[0][col].replace("\n", "")
+                    day = current_values[row][4].replace("\n", "")
+                    upd.append(
+                        (row + 1, col + 1, current_values[row][col], group, tm, day))
+        last_values = current_values
+        return upd
+    return False
+
+
+def send_notifications(upd):
+    # message = "Обнаружены изменения в таблице:\n\n" + "\n".join(changes)
+    print(upd)
+    # for chat_id in subscribers:
+    #     try:
+    #         print(message)
+    #     except Exception as e:
+    #         print(f"Ошибка отправки сообщения {chat_id}: {e}")
+
+
+while True:
+    time.sleep(2)  # Проверка каждые 30 секунд
+    changes = check_spreadsheet_changes()
+    # print(changes)
+    if changes:
+        send_notifications(changes)
