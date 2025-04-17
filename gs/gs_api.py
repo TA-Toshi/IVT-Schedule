@@ -1,5 +1,3 @@
-import asyncio
-import time
 from datetime import datetime
 from pathlib import Path
 import gspread
@@ -143,9 +141,6 @@ def get_free_classroom(day, number):
     return list(free_cabs.keys())[number - 1], list(free_cabs.values())[number - 1]
 
 
-# pprint(get_free_classroom("понедельник", 2))
-
-
 # txt??
 last_values = None
 
@@ -178,15 +173,3 @@ def check_spreadsheet_changes():
         return upd
     return False
 
-
-# def send_notifications(upd):
-#     # message = "Обнаружены изменения в таблице:\n\n" + "\n".join(changes)
-#     print(upd)
-
-
-# while True:
-#     time.sleep(2)  # Проверка каждые 30 секунд
-#     changes = check_spreadsheet_changes()
-#     # print(changes)
-#     if changes:
-#         send_notifications(changes)

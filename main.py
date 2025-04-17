@@ -30,13 +30,13 @@ async def send_notifications(upds):
 
     for chat_id, group in users:
         if group in upd_group:
-            message = "Обнаружены изменения в расписании\n"
+            message = "🔔 Внимание! Изменения в расписании! 🔔\n"
             for upd in upds:
                 if group == upd[3] and upd[2] not in message:
                     message += "\n"
                     message += f"{upd[3]} ({upd[-1]})\n"
-                    message += f"{upd[-2]}\n"
-                    message += f"{upd[2]}\n"
+                    message += f"🕘 {upd[-2]}\n"
+                    message += f"📚 {upd[2]}\n"
 
             try:
                 await bot.send_message(chat_id, message)
