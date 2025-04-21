@@ -3,30 +3,37 @@ from pathlib import Path
 import gspread
 import re
 
+from config import AUTUMN_PATH, SPRING_PATH
+
 current_dir = Path(__file__).parent
 creds_path = current_dir.parent / "creds.json"
 
 gc = gspread.service_account(filename=str(creds_path))
-wks = gc.open_by_key("164JbfoXNQVtHmsUGcReAKX81pZPDimaIORAKQ1Fi6Hg")
+# Осень
+wks = gc.open_by_key(SPRING_PATH)
+# wks = gc.open_by_key(SPRING_PATH)
 
 worksheet_schedule = wks.get_worksheet(0)
 worksheet_cabs = wks.get_worksheet(1)
+worksheet_teacher = wks.get_worksheet(2)
 
 lines_schedule = worksheet_schedule.get_all_values(
     combine_merged_cells=True,
     maintain_size=True,
     pad_values=True
 )
-
 lines_cabs = worksheet_cabs.get(
     range_name="H1:AH2",
     combine_merged_cells=True,
     maintain_size=True,
     pad_values=True
 )
+lines_teacher = worksheet_teacher.get_all_values(
+    combine_merged_cells=True,
+    maintain_size=True,
+    pad_values=True
+)
 
-
-# pprint(lines_cabs)
 
 def get_day_place(name):
     place = str(worksheet_schedule.find(name, in_column=5)).split()[1]
@@ -37,12 +44,26 @@ def get_day_place(name):
 
 
 def get_group_place(name):
-    cell = worksheet_schedule.find(name)
-    place = str(cell).split()[1]
-
+    cells_in_range = worksheet_schedule.range("G1:AK1")
+    matching_cells = [cell for cell in cells_in_range if name in str(cell.value)]
+    # cell = worksheet_schedule.findall(name)
+    place = str(matching_cells[0]).split()[1]
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
     return col
+
+
+def get_teacher_place(name):
+    cells_in_range = worksheet_teacher.range("G2:BQ2")
+    matching_cells = [cell for cell in cells_in_range if name in str(cell.value)]
+    # cell = worksheet_schedule.findall(name)
+    place = str(matching_cells[0]).split()[1]
+    numbers = re.findall(r'\d+', place)
+    row, col = map(int, numbers)
+    return col
+
+
+# print(get_teacher_place("Аверина"))
 
 
 def remove_consecutive_duplicates(tuples_list):
@@ -86,13 +107,29 @@ def get_by_day(group, day):
 
     cell_value = []
     for row in range(row_first, row_last):
-        time = lines_schedule[row][5][1:].replace("\n", "")
-        cell_value.append((time.replace(" ", ""), lines_schedule[row][col].replace("\n", "")))
+        time = lines_schedule[row][5][1:].replace("\n", " ")
+        cell_value.append((time.replace(" ", ""), lines_schedule[row][col].replace("\n", " ")))
     cell_value = remove_consecutive_duplicates(cell_value)
     return cell_value
 
 
-# pprint(get_by_day("ИВТ-13БО", "четверг"))
+def get_teacher_by_day(group, day):
+    first_last = get_day_place(day)
+    row_first = first_last[0] - 1
+    row_last = first_last[1]
+    col = get_teacher_place(group) - 1
+
+    cell_value = []
+    for row in range(row_first, row_last):
+        time = lines_teacher[row][5][1:].replace("\n", " ")
+        cell_value.append((time.replace(" ", ""), lines_teacher[row][col].replace("\n", " ")))
+    cell_value = remove_consecutive_duplicates(cell_value)
+    return cell_value
+
+
+# print(get_teacher_by_day("Аверина", "пятница"))
+
+
 def get_by_group(group):
     col = get_group_place(group) - 1
     rows = len(lines_schedule)
@@ -105,6 +142,23 @@ def get_by_group(group):
             cell_value.append((lines_schedule[row][col].replace("\n", "")))
     cell_value = remove_consecutive_duplicates(cell_value)
     return cell_value
+
+
+def get_by_teacher(name):
+    col = get_teacher_place(name) - 1
+    rows = len(lines_teacher)
+    cell_value = ["понедельник"]
+    for row in range(2, rows):
+        if lines_teacher[row][5]:
+            time = lines_teacher[row][5][1:].replace("\n", "")
+            cell_value.append((time.replace(" ", ""), lines_teacher[row][col].replace("\n", "")))
+        else:
+            cell_value.append((lines_teacher[row][col].replace("\n", "")))
+    cell_value = remove_consecutive_duplicates(cell_value)
+    return cell_value
+
+
+# print(get_by_teacher("Богомолов"))
 
 
 def get_classrooms():
@@ -172,4 +226,3 @@ def check_spreadsheet_changes():
         last_values = current_values
         return upd
     return False
-

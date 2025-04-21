@@ -3,8 +3,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
 from gs.db import add_to_db
-from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard
-from gs.gs_api import get_by_day, get_by_group, get_free_classroom
+from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
+from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day
 
 router = Router()
 
@@ -13,6 +13,7 @@ class Form(StatesGroup):
     select_group = State()
     select_day = State()
     select_lesson = State()
+    select_teacher = State()
 
 
 @router.message(F.text == "📅 Получить расписание")
@@ -24,7 +25,6 @@ async def start_schedule(message: types.Message, state: FSMContext):
 
 @router.message(Form.select_group)
 async def process_group(message: types.Message, state: FSMContext):
-
     await state.update_data(group=message.text, id=message.from_user.id)
     await message.answer("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
     await state.set_state(Form.select_day)
@@ -36,7 +36,7 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     try:
-        await add_to_db(data["id"], data["group"])
+        # await add_to_db(data["id"], data["group"])
         if day == "неделя":
             schedule = get_by_group(data['group'])
         else:
@@ -97,4 +97,45 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
 
     except Exception as e:
         await callback.message.edit_text("❌❌❌ Произошла ошибка. Попробуй еще раз")
+        await state.clear()
+
+
+@router.message(F.text == "👩‍💻 Расписание преподавателей")
+async def start_teacher(message: types.Message, state: FSMContext):
+    await message.answer("📝 Введите ФИО преподавателя"
+                         "\nНапиример Иванов И.И. или просто фамилию:")
+    await state.set_state(Form.select_teacher)
+
+
+@router.message(Form.select_teacher)
+async def process_teacher(message: types.Message, state: FSMContext):
+    await state.update_data(teacher=message.text, id=message.from_user.id)
+    await message.answer("📅 Теперь выбери день недели:", reply_markup=teachers_days_keyboard)
+    await state.set_state(Form.select_day)
+
+
+@router.callback_query(F.data.startswith("teach_"), Form.select_day)
+async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
+    day = callback.data.split("_")[1]
+    data = await state.get_data()
+
+    try:
+        if day == "неделя":
+            schedule = get_by_teacher(data['teacher'])
+        else:
+            schedule = get_teacher_by_day(data['teacher'], day)
+        response = f"📅 Расписание для {data['teacher']} ({day.capitalize()}):\n\n"
+
+        for item in schedule:
+            if type(item) == str:
+                response += f"{item}\n\n"
+            else:
+                if item[1]:
+                    response += f"⏰ {item[0]}: {item[1]}\n\n"
+
+        await callback.message.edit_text(response)
+        await state.clear()
+
+    except Exception as e:
+        await callback.message.edit_text("❌ Произошла ошибка. Проверь ФИО")
         await state.clear()

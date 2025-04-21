@@ -22,11 +22,6 @@ async def send_notifications(upds):
     upd_group = set()
     for upd in upds:
         upd_group.add(upd[3])
-    message = "Обнаружены изменения в расписании\n"
-    message += "\n"
-    message += f"{upd[3]} ({upd[-1]})\n"
-    message += f"{upd[-2]}\n"
-    message += f"{upd[2]}\n"
 
     for chat_id, group in users:
         if group in upd_group:
@@ -46,7 +41,8 @@ async def send_notifications(upds):
 
 async def periodic_check():
     while True:
-        await asyncio.sleep(10)
+        # 86400 - сутки
+        await asyncio.sleep(86400)
         changes = check_spreadsheet_changes()
         if changes:
             await send_notifications(changes)
