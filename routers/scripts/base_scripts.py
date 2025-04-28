@@ -1,10 +1,12 @@
+import re
+
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from gs.db import add_to_db
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
-from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day
+from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
+    check_colon_with_spaces
 
 router = Router()
 
@@ -36,7 +38,6 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     try:
-        # await add_to_db(data["id"], data["group"])
         if day == "неделя":
             schedule = get_by_group(data['group'])
         else:
@@ -44,13 +45,24 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
         response = f"📅 Расписание для {data['group']} ({day.capitalize()}):\n\n"
 
         for item in schedule:
-            if type(item) == str:
-                response += f"{item}\n\n"
+            if type(item) is str:
+                # if not re.search(r':[^-]*-', response):
+                #     response += "ПАР НЕТ\n"
+                response += f"{item}:\n\n"
             else:
-                if item[1]:
-                    response += f"⏰ {item[0]}: {item[1]}\n\n"
+                if item[0][1] or (item[0][1] == "" and item[1] != "full"):
+                    if item[1] == "first":
+                        response += "--------------\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]} - <b>Числитель</b>\n\n"
+                    elif item[1] == "second":
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]} - <b>Знаменатель</b>\n"
+                        response += "--------------\n"
+                    else:
+                        response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
+            if check_colon_with_spaces(response):
+                response += "ПАР НЕТ"
 
-        await callback.message.edit_text(response)
+        await callback.message.edit_text(text=response, parse_mode="HTML")
         await state.clear()
 
     except Exception as e:
@@ -127,13 +139,24 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
         response = f"📅 Расписание для {data['teacher']} ({day.capitalize()}):\n\n"
 
         for item in schedule:
-            if type(item) == str:
-                response += f"{item}\n\n"
+            if type(item) is str:
+                # if not re.search(r':[^-]*-', response):
+                #     response += "ПАР НЕТ\n"
+                response += f"- {item}:\n\n"
             else:
-                if item[1]:
-                    response += f"⏰ {item[0]}: {item[1]}\n\n"
+                if item[0][1] or (item[0][1] == "" and item[1] != "full"):
+                    if item[1] == "first":
+                        response += "--------------\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]} - <b>Числитель</b>\n\n"
+                    elif item[1] == "second":
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]} - <b>Знаменатель</b>\n"
+                        response += "--------------\n"
+                    else:
+                        response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
+            if check_colon_with_spaces(response):
+                response += "ПАР НЕТ"
 
-        await callback.message.edit_text(response)
+        await callback.message.edit_text(text=response, parse_mode="HTML")
         await state.clear()
 
     except Exception as e:

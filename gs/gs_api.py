@@ -3,13 +3,15 @@ from pathlib import Path
 import gspread
 import re
 
+from pprint import pprint
+
 from config import AUTUMN_PATH, SPRING_PATH
 
 current_dir = Path(__file__).parent
 creds_path = current_dir.parent / "creds.json"
 
 gc = gspread.service_account(filename=str(creds_path))
-# Осень
+
 wks = gc.open_by_key(SPRING_PATH)
 # wks = gc.open_by_key(SPRING_PATH)
 
@@ -69,19 +71,26 @@ def get_teacher_place(name):
 def remove_consecutive_duplicates(tuples_list):
     if not tuples_list:
         return []
-
-    result = [tuples_list[0]]
+    if type(tuples_list[0]) is str:
+        result = [tuples_list[0]]
+    else:
+        result = [[tuples_list[0], "first"]]
     for i in range(1, len(tuples_list)):
-        if tuples_list[i] != tuples_list[i - 1]:
+        if type(tuples_list[i]) is str:
             result.append(tuples_list[i])
+        elif tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] == tuples_list[i - 1][1]:
+            result[-1][1] = "full"
+        elif tuples_list[i][0] != tuples_list[i - 1][0]:
+            result.append([tuples_list[i], "first"])
+        elif tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] != tuples_list[i - 1][1]:
+            result.append([tuples_list[i], "second"])
     return result
 
 
 def extract_aud_number(text):
-    # Ищем "ауд." (регистронезависимо) + 3 цифры после
     match = re.search(r'\b\d{3}\b', text)
     if match:
-        return match.group()  # возвращаем найденные 3 цифры
+        return match.group()
     return None
 
 
@@ -113,6 +122,9 @@ def get_by_day(group, day):
     return cell_value
 
 
+# pprint(get_by_day("ИВТ-21БО", "понедельник"))
+
+
 def get_teacher_by_day(group, day):
     first_last = get_day_place(day)
     row_first = first_last[0] - 1
@@ -127,7 +139,7 @@ def get_teacher_by_day(group, day):
     return cell_value
 
 
-# print(get_teacher_by_day("Аверина", "пятница"))
+# pprint(get_teacher_by_day("Аверина", "пятница"))
 
 
 def get_by_group(group):
@@ -136,12 +148,15 @@ def get_by_group(group):
     cell_value = ["понедельник"]
     for row in range(2, rows):
         if lines_schedule[row][5]:
-            time = lines_schedule[row][5][1:].replace("\n", "")
-            cell_value.append((time.replace(" ", ""), lines_schedule[row][col].replace("\n", "")))
+            time = lines_schedule[row][5][1:].replace("\n", " ")
+            cell_value.append((time.replace(" ", ""), lines_schedule[row][col].replace("\n", " ")))
         else:
-            cell_value.append((lines_schedule[row][col].replace("\n", "")))
+            cell_value.append((lines_schedule[row][col].replace("\n", " ")))
     cell_value = remove_consecutive_duplicates(cell_value)
     return cell_value
+
+
+# pprint(get_by_group("ИТ-11БО"))
 
 
 def get_by_teacher(name):
@@ -150,15 +165,15 @@ def get_by_teacher(name):
     cell_value = ["понедельник"]
     for row in range(2, rows):
         if lines_teacher[row][5]:
-            time = lines_teacher[row][5][1:].replace("\n", "")
-            cell_value.append((time.replace(" ", ""), lines_teacher[row][col].replace("\n", "")))
+            time = lines_teacher[row][5][1:].replace("\n", " ")
+            cell_value.append((time.replace(" ", ""), lines_teacher[row][col].replace("\n", " ")))
         else:
-            cell_value.append((lines_teacher[row][col].replace("\n", "")))
+            cell_value.append((lines_teacher[row][col].replace("\n", " ")))
     cell_value = remove_consecutive_duplicates(cell_value)
     return cell_value
 
 
-# print(get_by_teacher("Богомолов"))
+# pprint(get_by_teacher("Богомолов"))
 
 
 def get_classrooms():
@@ -217,7 +232,6 @@ def check_spreadsheet_changes():
         for row, (prev_row, curr_row) in enumerate(zip(last_values, current_values)):
             for col in range(len(prev_row)):
                 if prev_row[col] != curr_row[col]:
-                    # changes.append(f"Строка {i + 1}, Столбец {j + 1}: {curr_row[j]}")
                     tm = current_values[row][5].replace("\n", "")[1:]
                     group = current_values[0][col].replace("\n", "")
                     day = current_values[row][4].replace("\n", "")
@@ -226,3 +240,8 @@ def check_spreadsheet_changes():
         last_values = current_values
         return upd
     return False
+
+
+def check_colon_with_spaces(line):
+    part_after_colon = line.split(':', 1)[1]
+    return part_after_colon.strip() == ''

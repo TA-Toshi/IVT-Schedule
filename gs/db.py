@@ -29,11 +29,3 @@ async def get_all_users():
 
 
 
-# def main():
-#     # Создаем event loop и запускаем корутину
-#     users = asyncio.run(get_all_users())
-#     print(users)
-#
-#
-# if __name__ == "__main__":
-#     main()
