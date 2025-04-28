@@ -4,7 +4,8 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
+from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard, \
+    cancel_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
     check_colon_with_spaces
 
@@ -66,8 +67,10 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
     except Exception as e:
-        await callback.message.edit_text("❌ Произошла ошибка. Проверь название группы")
-        await state.clear()
+        await callback.message.edit_text(
+            text="❌ Произошла ошибка. Проверь название группы\nи введите заново:",
+            reply_markup=cancel_keyboard)
+        await state.set_state(Form.select_group)
 
 
 @router.message(F.text == "🚪 Найти свободные аудитории")
@@ -160,5 +163,13 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
     except Exception as e:
-        await callback.message.edit_text("❌ Произошла ошибка. Проверь ФИО")
-        await state.clear()
+        await callback.message.edit_text(
+            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:",
+            reply_markup=cancel_keyboard)
+        await state.set_state(Form.select_teacher)
+
+
+@router.callback_query(F.data.startswith("cancel"))
+async def cancel(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(f"Действие отменено")
+    await state.clear()

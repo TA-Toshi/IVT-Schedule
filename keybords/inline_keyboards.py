@@ -40,3 +40,7 @@ teachers_days_keyboard = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Вся Неделя", callback_data="teach_неделя")]
     ]
 )
+
+cancel_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text="Отмена", callback_data="cancel")]]
+)
