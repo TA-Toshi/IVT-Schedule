@@ -47,8 +47,11 @@ def get_day_place(name):
 
 def get_group_place(name):
     cells_in_range = worksheet_schedule.range("G1:AK1")
-    matching_cells = [cell for cell in cells_in_range if name in str(cell.value)]
-    # cell = worksheet_schedule.findall(name)
+    matching_cells = [
+        cell
+        for cell in cells_in_range
+        if name.lower() in str(cell.value).lower()
+    ]
     place = str(matching_cells[0]).split()[1]
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
@@ -57,15 +60,33 @@ def get_group_place(name):
 
 def get_teacher_place(name):
     cells_in_range = worksheet_teacher.range("G2:BQ2")
-    matching_cells = [cell for cell in cells_in_range if name in str(cell.value)]
-    # cell = worksheet_schedule.findall(name)
+
+    matching_cells = [
+        cell
+        for cell in cells_in_range
+        if name.lower() in str(cell.value).lower()
+    ]
+
     place = str(matching_cells[0]).split()[1]
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
+
     return col
 
 
-# print(get_teacher_place("Аверина"))
+def check_namesake(name):
+    cells_in_range = worksheet_teacher.range("G2:BQ2")
+    matching_cells = [
+        cell
+        for cell in cells_in_range
+        if name.lower() in str(cell.value).lower()
+    ]
+    basket = []
+    for cell in matching_cells:
+        name_test = str(cell).split("'")[1]
+        basket.append(name_test)
+
+    return basket
 
 
 def remove_consecutive_duplicates(tuples_list):
@@ -125,11 +146,11 @@ def get_by_day(group, day):
 # pprint(get_by_day("ИВТ-21БО", "понедельник"))
 
 
-def get_teacher_by_day(group, day):
+def get_teacher_by_day(teacher, day):
     first_last = get_day_place(day)
     row_first = first_last[0] - 1
     row_last = first_last[1]
-    col = get_teacher_place(group) - 1
+    col = get_teacher_place(teacher) - 1
 
     cell_value = []
     for row in range(row_first, row_last):
@@ -139,7 +160,7 @@ def get_teacher_by_day(group, day):
     return cell_value
 
 
-# pprint(get_teacher_by_day("Аверина", "пятница"))
+# pprint(get_teacher_by_day("Лагутина", "понедельник"))
 
 
 def get_by_group(group):
@@ -173,7 +194,7 @@ def get_by_teacher(name):
     return cell_value
 
 
-# pprint(get_by_teacher("Богомолов"))
+# pprint(get_by_teacher("Лагутина"))
 
 
 def get_classrooms():

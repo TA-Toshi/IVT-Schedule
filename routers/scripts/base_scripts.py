@@ -1,13 +1,12 @@
-import re
-
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard, \
     cancel_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
-    check_colon_with_spaces
+    check_colon_with_spaces, check_namesake
 
 router = Router()
 
@@ -17,6 +16,7 @@ class Form(StatesGroup):
     select_day = State()
     select_lesson = State()
     select_teacher = State()
+    check_namesake = State()
 
 
 @router.message(F.text == "📅 Получить расписание")
@@ -123,9 +123,39 @@ async def start_teacher(message: types.Message, state: FSMContext):
 
 
 @router.message(Form.select_teacher)
-async def process_teacher(message: types.Message, state: FSMContext):
-    await state.update_data(teacher=message.text, id=message.from_user.id)
-    await message.answer("📅 Теперь выбери день недели:", reply_markup=teachers_days_keyboard)
+async def check_ns(message: types.Message, state: FSMContext):
+    try:
+        teacher_namesake = check_namesake(message.text)
+        if len(teacher_namesake) > 1:
+            keyboard = []
+            for name in teacher_namesake:
+                keyboard.append([InlineKeyboardButton(
+                    text=name,
+                    callback_data=name
+                )])
+            await message.answer(
+                text="Для точного поиска, укажите полное ФИО преподавателя",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
+            )
+            await state.set_state(Form.check_namesake)
+        elif len(teacher_namesake) == 1:
+            await state.update_data(teacher=teacher_namesake[0])
+            await message.answer("📅 Теперь выбери день недели:", reply_markup=teachers_days_keyboard)
+            await state.set_state(Form.select_day)
+        else:
+            raise Exception("Фамилии нет в списке")
+    except Exception as e:
+        await message.answer(
+            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:",
+            reply_markup=cancel_keyboard)
+        await state.set_state(Form.select_teacher)
+
+
+@router.callback_query(Form.check_namesake)
+async def process_teacher(callback: types.CallbackQuery, state: FSMContext):
+    teacher = callback.data
+    await state.update_data(teacher=teacher)
+    await callback.message.edit_text("📅 Теперь выбери день недели:", reply_markup=teachers_days_keyboard)
     await state.set_state(Form.select_day)
 
 
@@ -150,9 +180,9 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
                     if item[1] == "first":
                         response += "--------------\n"
-                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]} - <b>Числитель</b>\n\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]}\n\n"
                     elif item[1] == "second":
-                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]} - <b>Знаменатель</b>\n"
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]}\n"
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
