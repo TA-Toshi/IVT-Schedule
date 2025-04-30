@@ -55,7 +55,24 @@ def get_group_place(name):
     place = str(matching_cells[0]).split()[1]
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
+
     return col
+
+
+def group_match(name):
+    cells_in_range = worksheet_schedule.range("G1:AK1")
+    normalized_input = ''.join([c.lower() for c in name if c.isalnum()])
+    clear_basket = []
+    basket = [
+        cell for cell in cells_in_range
+        if normalized_input in ''.join([c.lower() for c in str(cell.value) if c.isalnum()])
+    ]
+    for item in basket:
+        clear_basket.append(str(item).split("'")[1].split("\\n")[0])
+    return clear_basket
+
+
+# print(group_match("ивт"))
 
 
 def get_teacher_place(name):
@@ -70,7 +87,6 @@ def get_teacher_place(name):
     place = str(matching_cells[0]).split()[1]
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
-
     return col
 
 
@@ -85,7 +101,6 @@ def check_namesake(name):
     for cell in matching_cells:
         name_test = str(cell).split("'")[1]
         basket.append(name_test)
-
     return basket
 
 
@@ -99,12 +114,14 @@ def remove_consecutive_duplicates(tuples_list):
     for i in range(1, len(tuples_list)):
         if type(tuples_list[i]) is str:
             result.append(tuples_list[i])
-        elif tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] == tuples_list[i - 1][1]:
-            result[-1][1] = "full"
-        elif tuples_list[i][0] != tuples_list[i - 1][0]:
-            result.append([tuples_list[i], "first"])
-        elif tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] != tuples_list[i - 1][1]:
-            result.append([tuples_list[i], "second"])
+        elif type(tuples_list[i-1]) is not str:
+            if tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] == tuples_list[i - 1][1]:
+                if type(result[-1]) is not str:
+                    result[-1][1] = "full"
+            elif tuples_list[i][0] != tuples_list[i - 1][0]:
+                result.append([tuples_list[i], "first"])
+            elif tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] != tuples_list[i - 1][1]:
+                result.append([tuples_list[i], "second"])
     return result
 
 
@@ -177,7 +194,7 @@ def get_by_group(group):
     return cell_value
 
 
-# pprint(get_by_group("ИТ-11БО"))
+pprint(get_by_group("ИВТ-13МО"))
 
 
 def get_by_teacher(name):

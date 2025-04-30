@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard, \
     cancel_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
-    check_colon_with_spaces, check_namesake
+    check_colon_with_spaces, check_namesake, group_match
 
 router = Router()
 
@@ -17,6 +17,7 @@ class Form(StatesGroup):
     select_lesson = State()
     select_teacher = State()
     check_namesake = State()
+    group_match = State()
 
 
 @router.message(F.text == "📅 Получить расписание")
@@ -44,8 +45,39 @@ async def start_teacher(message: types.Message, state: FSMContext):
 
 @router.message(Form.select_group)
 async def process_group(message: types.Message, state: FSMContext):
-    await state.update_data(group=message.text, id=message.from_user.id)
-    await message.answer("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
+    try:
+        match = group_match(message.text)
+        if len(match) > 1:
+            keyboard = []
+            for i in range(0, len(match), 2):
+                row = match[i:i + 2]
+                keyboard_row = [
+                    InlineKeyboardButton(text=name, callback_data=name)
+                    for name in row
+                ]
+                keyboard.append(keyboard_row)
+            await message.answer(
+                text="Для точного поиска, уточните группу",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
+            )
+            await state.set_state(Form.group_match)
+        elif len(match) == 1:
+            await state.update_data(group=message.text)
+            await message.answer("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
+            await state.set_state(Form.select_day)
+        else:
+            raise Exception("Группы нет в списке")
+    except Exception as e:
+        await message.answer(
+            text="❌ Произошла ошибка. Проверьте название группы\nи введите заново:")
+        await state.set_state(Form.select_group)
+
+
+@router.callback_query(Form.group_match)
+async def match_days(callback: types.CallbackQuery, state: FSMContext):
+    group = callback.data
+    await state.update_data(group=group)
+    await callback.message.edit_text("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
     await state.set_state(Form.select_day)
 
 
@@ -70,9 +102,9 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
                     if item[1] == "first":
                         response += "--------------\n"
-                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]} - <b>Числитель</b>\n\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]}\n\n"
                     elif item[1] == "second":
-                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]} - <b>Знаменатель</b>\n"
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]}\n"
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
@@ -84,8 +116,7 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
 
     except Exception as e:
         await callback.message.edit_text(
-            text="❌ Произошла ошибка. Проверь название группы\nи введите заново:",
-            reply_markup=cancel_keyboard)
+            text="❌ Произошла ошибка. Проверь название группы\nи введите заново:")
         await state.set_state(Form.select_group)
 
 
@@ -125,13 +156,6 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
 
-@router.message(F.text == "👩‍💻 Расписание преподавателей")
-async def start_teacher(message: types.Message, state: FSMContext):
-    await message.answer("📝 Введите ФИО преподавателя"
-                         "\nНапример Иванов И.И. или просто фамилию:")
-    await state.set_state(Form.select_teacher)
-
-
 @router.message(Form.select_teacher)
 async def check_ns(message: types.Message, state: FSMContext):
     try:
@@ -156,8 +180,7 @@ async def check_ns(message: types.Message, state: FSMContext):
             raise Exception("Фамилии нет в списке")
     except Exception as e:
         await message.answer(
-            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:",
-            reply_markup=cancel_keyboard)
+            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:")
         await state.set_state(Form.select_teacher)
 
 
@@ -204,8 +227,7 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
 
     except Exception as e:
         await callback.message.edit_text(
-            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:",
-            reply_markup=cancel_keyboard)
+            text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:")
         await state.set_state(Form.select_teacher)
 
 
