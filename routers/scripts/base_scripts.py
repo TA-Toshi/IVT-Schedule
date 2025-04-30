@@ -21,9 +21,25 @@ class Form(StatesGroup):
 
 @router.message(F.text == "📅 Получить расписание")
 async def start_schedule(message: types.Message, state: FSMContext):
+    await state.clear()
     await message.answer("📝 Введи название своей группы"
                          "\nНапример ИВТ-13БО:")
     await state.set_state(Form.select_group)
+
+
+@router.message(F.text == "🚪 Найти свободные аудитории")
+async def start_free_classrooms(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("📅 Выбери день недели:", reply_markup=days_keyboard)
+    await state.set_state(Form.select_day)
+
+
+@router.message(F.text == "👩‍💻 Расписание преподавателей")
+async def start_teacher(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("📝 Введите ФИО преподавателя"
+                         "\nНапример Иванов И.И. или просто фамилию:")
+    await state.set_state(Form.select_teacher)
 
 
 @router.message(Form.select_group)
@@ -71,12 +87,6 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
             text="❌ Произошла ошибка. Проверь название группы\nи введите заново:",
             reply_markup=cancel_keyboard)
         await state.set_state(Form.select_group)
-
-
-@router.message(F.text == "🚪 Найти свободные аудитории")
-async def start_free_classrooms(message: types.Message, state: FSMContext):
-    await message.answer("📅 Выбери день недели:", reply_markup=days_keyboard)
-    await state.set_state(Form.select_day)
 
 
 @router.callback_query(F.data.startswith("day_"), Form.select_day)
