@@ -22,7 +22,7 @@ class Form(StatesGroup):
 @router.message(F.text == "📅 Получить расписание")
 async def start_schedule(message: types.Message, state: FSMContext):
     await message.answer("📝 Введи название своей группы"
-                         "\nНапиример ИВТ-13БО:")
+                         "\nНапример ИВТ-13БО:")
     await state.set_state(Form.select_group)
 
 
@@ -118,7 +118,7 @@ async def process_lesson(callback: types.CallbackQuery, state: FSMContext):
 @router.message(F.text == "👩‍💻 Расписание преподавателей")
 async def start_teacher(message: types.Message, state: FSMContext):
     await message.answer("📝 Введите ФИО преподавателя"
-                         "\nНапиример Иванов И.И. или просто фамилию:")
+                         "\nНапример Иванов И.И. или просто фамилию:")
     await state.set_state(Form.select_teacher)
 
 
