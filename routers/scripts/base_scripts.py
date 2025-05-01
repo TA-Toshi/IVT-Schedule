@@ -3,10 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard, \
-    cancel_keyboard
+from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
-    check_colon_with_spaces, check_namesake, group_match
+    check_namesake, group_match, process_schedule
 
 router = Router()
 
@@ -92,12 +91,9 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
         else:
             schedule = get_by_day(data['group'], day)
         response = f"📅 Расписание для {data['group']} ({day.capitalize()}):\n\n"
-
         for item in schedule:
             if type(item) is str:
-                # if not re.search(r':[^-]*-', response):
-                #     response += "ПАР НЕТ\n"
-                response += f"{item}:\n\n"
+                response += f"- {item}:\n\n"
             else:
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
                     if item[1] == "first":
@@ -108,9 +104,7 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
-            if check_colon_with_spaces(response):
-                response += "ПАР НЕТ"
-
+        response = process_schedule(response)
         await callback.message.edit_text(text=response, parse_mode="HTML")
         await state.clear()
 
@@ -206,8 +200,6 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
 
         for item in schedule:
             if type(item) is str:
-                # if not re.search(r':[^-]*-', response):
-                #     response += "ПАР НЕТ\n"
                 response += f"- {item}:\n\n"
             else:
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
@@ -219,9 +211,7 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
-            if check_colon_with_spaces(response):
-                response += "ПАР НЕТ"
-
+        response = process_schedule(response)
         await callback.message.edit_text(text=response, parse_mode="HTML")
         await state.clear()
 

@@ -105,6 +105,8 @@ def check_namesake(name):
 
 
 def remove_consecutive_duplicates(tuples_list):
+    week = ["вторник", "среда", "четверг", "пятница", "суббота"]
+    counter = 0
     if not tuples_list:
         return []
     if type(tuples_list[0]) is str:
@@ -113,8 +115,15 @@ def remove_consecutive_duplicates(tuples_list):
         result = [[tuples_list[0], "first"]]
     for i in range(1, len(tuples_list)):
         if type(tuples_list[i]) is str:
-            result.append(tuples_list[i])
-        elif type(tuples_list[i-1]) is not str:
+            if tuples_list[i] != '':
+                result.append(tuples_list[i])
+                # print(tuples_list[i], counter, week[counter])
+                counter += 1
+            elif tuples_list[i] == '':
+                result.append(week[counter])
+                # print(tuples_list[i], counter, week[counter])
+                counter += 1
+        else:
             if tuples_list[i][0] == tuples_list[i - 1][0] and tuples_list[i][1] == tuples_list[i - 1][1]:
                 if type(result[-1]) is not str:
                     result[-1][1] = "full"
@@ -186,7 +195,7 @@ def get_by_group(group):
     cell_value = ["понедельник"]
     for row in range(2, rows):
         if lines_schedule[row][5]:
-            time = lines_schedule[row][5][1:].replace("\n", " ")
+            time = lines_schedule[row][5][1:].replace("\n", "")
             cell_value.append((time.replace(" ", ""), lines_schedule[row][col].replace("\n", " ")))
         else:
             cell_value.append((lines_schedule[row][col].replace("\n", " ")))
@@ -194,7 +203,7 @@ def get_by_group(group):
     return cell_value
 
 
-pprint(get_by_group("ИВТ-13МО"))
+# pprint(get_by_group("ИВТ-21БО"))
 
 
 def get_by_teacher(name):
@@ -280,6 +289,54 @@ def check_spreadsheet_changes():
     return False
 
 
-def check_colon_with_spaces(line):
-    part_after_colon = line.split(':', 1)[1]
-    return part_after_colon.strip() == ''
+def process_schedule(text):
+    lines = text.strip().split('\n')
+    result = []
+
+    # Определяем тип расписания
+    is_week = '(Неделя)' in lines[0]
+    current_day = None
+    day_content = []
+
+    for line in lines:
+        line = line.rstrip()
+
+        # Обнаружение нового дня (только для недельного расписания)
+        if is_week and line.startswith('- ') and ':' in line:
+            if current_day is not None:
+                # Обработка предыдущего дня
+                if not any(c.strip() for c in day_content if c not in ('', '--------')):
+                    result.append(f"{current_day} нет пар")
+                else:
+                    result.append(current_day)
+                    result.extend(day_content)
+            # Начинаем новый день
+            current_day = line
+            day_content = []
+            continue
+
+        # Сохраняем содержимое дня
+        if current_day is not None:
+            day_content.append(line)
+        else:
+            result.append(line)
+
+    # Обработка последнего дня
+    if is_week and current_day is not None:
+        if not any(c.strip() for c in day_content if c not in ('', '--------')):
+            result.append(f"{current_day} нет пар")
+        else:
+            result.append(current_day)
+            result.extend(day_content)
+
+    # Обработка формата для одного дня
+    if not is_week:
+        has_content = any(
+            line.strip() and not line.startswith('--------')
+            for line in lines[1:]
+        )
+        if not has_content:
+            result.append("нет пар")
+
+    # Восстанавливаем оригинальные пустые строки между днями
+    return '\n'.join(result).replace('нет пар\n-', 'нет пар\n\n-')
