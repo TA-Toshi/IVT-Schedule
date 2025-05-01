@@ -114,13 +114,15 @@ def remove_consecutive_duplicates(tuples_list):
     else:
         result = [[tuples_list[0], "first"]]
     for i in range(1, len(tuples_list)):
+
         if type(tuples_list[i]) is str:
             if tuples_list[i] != '':
                 result.append(tuples_list[i])
                 # print(tuples_list[i], counter, week[counter])
                 counter += 1
             elif tuples_list[i] == '':
-                result.append(week[counter])
+                tuples_list[i] = week[counter]
+                result.append(tuples_list[i])
                 # print(tuples_list[i], counter, week[counter])
                 counter += 1
         else:
@@ -220,7 +222,7 @@ def get_by_teacher(name):
     return cell_value
 
 
-# pprint(get_by_teacher("Лагутина"))
+pprint(get_by_teacher("Лавровский"))
 
 
 def get_classrooms():

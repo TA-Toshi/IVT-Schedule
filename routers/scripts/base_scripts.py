@@ -109,6 +109,7 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
     except Exception as e:
+        print(e)
         await callback.message.edit_text(
             text="❌ Произошла ошибка. Проверь название группы\nи введите заново:")
         await state.set_state(Form.select_group)
@@ -173,6 +174,7 @@ async def check_ns(message: types.Message, state: FSMContext):
         else:
             raise Exception("Фамилии нет в списке")
     except Exception as e:
+        print(e)
         await message.answer(
             text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:")
         await state.set_state(Form.select_teacher)
@@ -216,6 +218,7 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
         await state.clear()
 
     except Exception as e:
+        print(e)
         await callback.message.edit_text(
             text="❌ Произошла ошибка. Проверь ФИО\nи введите заново:")
         await state.set_state(Form.select_teacher)
