@@ -28,4 +28,16 @@ async def get_all_users():
         return await cursor.fetchall()
 
 
+async def get_groups_by_user_id(telegram_id):
+    async with aiosqlite.connect("gs/tg.db") as db:
+        await db.execute("CREATE TABLE IF NOT EXISTS users (telegram_id BIGINT, user_group TEXT)")
+        cursor = await db.execute("SELECT user_group FROM users WHERE telegram_id = ?", (telegram_id,))
+        rows = await cursor.fetchall()
+        return [row[0] for row in rows]
 
+
+async def del_all_from_db(telegram_id):
+    async with aiosqlite.connect("gs/tg.db") as db:
+        await db.execute("CREATE TABLE IF NOT EXISTS users (telegram_id BIGINT, user_group TEXT)")
+        await db.execute("DELETE FROM users WHERE telegram_id = ?", (telegram_id,))
+        await db.commit()

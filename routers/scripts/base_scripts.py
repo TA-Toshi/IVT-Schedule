@@ -1,22 +1,13 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
     check_namesake, group_match, process_schedule
+from states.states import Form
 
 router = Router()
-
-
-class Form(StatesGroup):
-    select_group = State()
-    select_day = State()
-    select_lesson = State()
-    select_teacher = State()
-    check_namesake = State()
-    group_match = State()
 
 
 @router.message(F.text == "📅 Получить расписание")

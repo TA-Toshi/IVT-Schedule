@@ -222,7 +222,7 @@ def get_by_teacher(name):
     return cell_value
 
 
-pprint(get_by_teacher("Лавровский"))
+# pprint(get_by_teacher("Лавровский"))
 
 
 def get_classrooms():
