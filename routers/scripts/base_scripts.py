@@ -52,7 +52,7 @@ async def process_group(message: types.Message, state: FSMContext):
             )
             await state.set_state(Form.group_match)
         elif len(match) == 1:
-            await state.update_data(group=message.text)
+            await state.update_data(group=match[0])
             await message.answer("📅 Теперь выбери день недели:", reply_markup=week_keyboard)
             await state.set_state(Form.select_day)
         else:

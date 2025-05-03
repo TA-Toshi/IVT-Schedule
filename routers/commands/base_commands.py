@@ -54,6 +54,7 @@ async def cmd_help(message: types.Message):
 @router.message(Command("sub"))
 async def cmd_sub(message: types.Message, command: CommandObject, state: FSMContext):
     try:
+        await state.clear()
         match = group_match(command.args)
         if len(match) > 1:
             keyboard = []
@@ -72,11 +73,13 @@ async def cmd_sub(message: types.Message, command: CommandObject, state: FSMCont
         elif len(match) == 1:
             await add_to_db(message.from_user.id, match[0])
             await message.answer(text=f"Подписка на обновления гуппы - {match[0]}")
+            await state.clear()
         else:
             raise Exception("Группы нет в списке")
     except Exception as e:
         await message.answer(
             text=f"❌ Произошла ошибка. Проверьте название группы\nи введите команду заново:")
+        await state.clear()
 
 
 @router.callback_query(Form.sub)
@@ -89,6 +92,7 @@ async def match_sub(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(Command("unsub"))
 async def cmd_unsub(message: types.Message, state: FSMContext):
+    await state.clear()
     subs = await get_groups_by_user_id(message.from_user.id)
     try:
         if subs:
@@ -113,6 +117,7 @@ async def cmd_unsub(message: types.Message, state: FSMContext):
     except Exception as e:
         await message.answer(
             text=f"❌ У вас нет подписок")
+        await state.clear()
 
 
 @router.callback_query(Form.unsub)
