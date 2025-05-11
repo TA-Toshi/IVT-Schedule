@@ -87,11 +87,14 @@ async def process_day(callback: types.CallbackQuery, state: FSMContext):
                 response += f"- {item}:\n\n"
             else:
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
+                    check = item[0][1]
+                    if item[0][1] == "":
+                        check = "нет пар"
                     if item[1] == "first":
                         response += "--------------\n"
-                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]}\n\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {check}\n\n"
                     elif item[1] == "second":
-                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]}\n"
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {check}\n"
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
@@ -196,11 +199,14 @@ async def process_teacher_day(callback: types.CallbackQuery, state: FSMContext):
                 response += f"- {item}:\n\n"
             else:
                 if item[0][1] or (item[0][1] == "" and item[1] != "full"):
+                    check = item[0][1]
+                    if item[0][1] == "":
+                        check = "нет пар"
                     if item[1] == "first":
                         response += "--------------\n"
-                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {item[0][1]}\n\n"
+                        response += f"⏰ <b>{item[0][0]}/Числитель</b>: {check}\n\n"
                     elif item[1] == "second":
-                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {item[0][1]}\n"
+                        response += f"⏰ <b>{item[0][0]}/Знаменатель</b>: {check}\n"
                         response += "--------------\n"
                     else:
                         response += f"⏰ <b>{item[0][0]}</b>: {item[0][1]}\n\n"
