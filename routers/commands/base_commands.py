@@ -52,10 +52,16 @@ async def cmd_help(message: types.Message):
 
 
 @router.message(Command("sub"))
-async def cmd_sub(message: types.Message, command: CommandObject, state: FSMContext):
+async def cmd_sub(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer(text="Укажите группу для подписки")
+    await state.set_state(Form.pre_sub)
+
+
+@router.message(Form.pre_sub)
+async def ft_cmd_sub(message: types.Message, state: FSMContext):
     try:
-        await state.clear()
-        match = group_match(command.args)
+        match = group_match(message.text)
         if len(match) > 1:
             keyboard = []
             for i in range(0, len(match), 2):

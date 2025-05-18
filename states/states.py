@@ -9,4 +9,5 @@ class Form(StatesGroup):
     check_namesake = State()
     group_match = State()
     sub = State()
+    pre_sub = State()
     unsub = State()
