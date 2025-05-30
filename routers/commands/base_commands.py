@@ -58,44 +58,6 @@ async def cmd_sub(message: types.Message, state: FSMContext):
     await state.set_state(Form.pre_sub)
 
 
-@router.message(Form.pre_sub)
-async def ft_cmd_sub(message: types.Message, state: FSMContext):
-    try:
-        match = group_match(message.text)
-        if len(match) > 1:
-            keyboard = []
-            for i in range(0, len(match), 2):
-                row = match[i:i + 2]
-                keyboard_row = [
-                    InlineKeyboardButton(text=name, callback_data=name)
-                    for name in row
-                ]
-                keyboard.append(keyboard_row)
-            await message.answer(
-                text="Уточните группу",
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
-            )
-            await state.set_state(Form.sub)
-        elif len(match) == 1:
-            await add_to_db(message.from_user.id, match[0])
-            await message.answer(text=f"Подписка на обновления гуппы - {match[0]}")
-            await state.clear()
-        else:
-            raise Exception("Группы нет в списке")
-    except Exception as e:
-        await message.answer(
-            text=f"❌ Произошла ошибка. Проверьте название группы\nи введите команду заново:")
-        await state.clear()
-
-
-@router.callback_query(Form.sub)
-async def match_sub(callback: types.CallbackQuery, state: FSMContext):
-    group = callback.data
-    await add_to_db(callback.from_user.id, group)
-    await callback.message.edit_text(text=f"Подписка на обновления группы - {group}")
-    await state.clear()
-
-
 @router.message(Command("unsub"))
 async def cmd_unsub(message: types.Message, state: FSMContext):
     await state.clear()
@@ -124,6 +86,44 @@ async def cmd_unsub(message: types.Message, state: FSMContext):
         await message.answer(
             text=f"❌ У вас нет подписок")
         await state.clear()
+
+
+@router.message(Form.pre_sub)
+async def ft_cmd_sub(message: types.Message, state: FSMContext):
+    try:
+        match = group_match(message.text)
+        if len(match) > 1:
+            keyboard = []
+            for i in range(0, len(match), 2):
+                row = match[i:i + 2]
+                keyboard_row = [
+                    InlineKeyboardButton(text=name, callback_data=name)
+                    for name in row
+                ]
+                keyboard.append(keyboard_row)
+            await message.answer(
+                text="Уточните группу",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
+            )
+            await state.set_state(Form.sub)
+        elif len(match) == 1:
+            await add_to_db(message.from_user.id, match[0])
+            await message.answer(text=f"Подписка на обновления гуппы - {match[0]}")
+            await state.clear()
+        else:
+            raise Exception("Группы нет в списке")
+    except Exception as e:
+        await message.answer(
+            text=f"❌ Произошла ошибка. Проверьте название группы\nи введите команду заново:")
+        await state.set_state(Form.pre_sub)
+
+
+@router.callback_query(Form.sub)
+async def match_sub(callback: types.CallbackQuery, state: FSMContext):
+    group = callback.data
+    await add_to_db(callback.from_user.id, group)
+    await callback.message.edit_text(text=f"Подписка на обновления группы - {group}")
+    await state.clear()
 
 
 @router.callback_query(Form.unsub)

@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from gs.db import get_groups_by_user_id
 from keybords.inline_keyboards import days_keyboard, lessons_keyboard, week_keyboard, teachers_days_keyboard
 from gs.gs_api import get_by_day, get_by_group, get_free_classroom, get_by_teacher, get_teacher_by_day, \
     check_namesake, group_match, process_schedule
@@ -31,6 +32,28 @@ async def start_teacher(message: types.Message, state: FSMContext):
     await message.answer("📝 Введите ФИО преподавателя"
                          "\nНапример Иванов И.И. или просто фамилию:")
     await state.set_state(Form.select_teacher)
+
+
+@router.message(F.text == "Подписки")
+async def subs_list(message: types.Message, state: FSMContext):
+    keyboard = []
+    subs = await get_groups_by_user_id(message.from_user.id)
+    if subs:
+        for i in range(0, len(subs), 2):
+            row = subs[i:i + 2]
+            keyboard_row = [
+                InlineKeyboardButton(text=name, callback_data=name)
+                for name in row
+            ]
+            keyboard.append(keyboard_row)
+        await message.answer(
+            text="Подписки",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
+        )
+        await state.set_state(Form.group_match)
+    else:
+        await message.answer(text=f"Нет подписок")
+        await state.clear()
 
 
 @router.message(Form.select_group)
