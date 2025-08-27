@@ -34,7 +34,7 @@ async def start_teacher(message: types.Message, state: FSMContext):
     await state.set_state(Form.select_teacher)
 
 
-@router.message(F.text == "Подписки")
+@router.message(F.text == "👥 Подписки")
 async def subs_list(message: types.Message, state: FSMContext):
     keyboard = []
     subs = await get_groups_by_user_id(message.from_user.id)

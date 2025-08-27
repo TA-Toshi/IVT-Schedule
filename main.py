@@ -8,9 +8,13 @@ from gs.gs_api import check_spreadsheet_changes
 from routers.commands.base_commands import router as base_command_router
 from routers.scripts.base_scripts import router as base_script_router
 
-import config
+import os
+from dotenv import load_dotenv, find_dotenv
 
-bot = Bot(token=config.BOT_TOKEN)
+load_dotenv(find_dotenv())
+
+
+bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher()
 
 dp.include_router(base_command_router)

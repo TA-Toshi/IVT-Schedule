@@ -3,21 +3,20 @@ from pathlib import Path
 import gspread
 import re
 
-from pprint import pprint
+import os
+from dotenv import load_dotenv, find_dotenv
 
-from config import AUTUMN_PATH, SPRING_PATH
+load_dotenv(find_dotenv())
 
 current_dir = Path(__file__).parent
 creds_path = current_dir.parent / "creds.json"
 
 gc = gspread.service_account(filename=str(creds_path))
 
-wks = gc.open_by_key(SPRING_PATH)
-# wks = gc.open_by_key(SPRING_PATH)
-
+wks = gc.open_by_key(os.getenv("SPRING_PATH"))
 worksheet_schedule = wks.get_worksheet(0)
-worksheet_cabs = wks.get_worksheet(1)
-worksheet_teacher = wks.get_worksheet(2)
+worksheet_cabs = wks.get_worksheet(2)
+worksheet_teacher = wks.get_worksheet(3)
 
 lines_schedule = worksheet_schedule.get_all_values(
     combine_merged_cells=True,
@@ -88,7 +87,7 @@ def get_teacher_place(name):
     numbers = re.findall(r'\d+', place)
     row, col = map(int, numbers)
     return col
-
+# print(get_teacher_place("Аверина М.Д."))
 
 def check_namesake(name):
     cells_in_range = worksheet_teacher.range("G2:BQ2")
