@@ -15,8 +15,8 @@ gc = gspread.service_account(filename=str(creds_path))
 
 wks = gc.open_by_key(os.getenv("SPRING_PATH"))
 worksheet_schedule = wks.get_worksheet(0)
-worksheet_cabs = wks.get_worksheet(2)
-worksheet_teacher = wks.get_worksheet(3)
+worksheet_cabs = wks.get_worksheet(1)
+worksheet_teacher = wks.get_worksheet(2)
 
 lines_schedule = worksheet_schedule.get_all_values(
     combine_merged_cells=True,
